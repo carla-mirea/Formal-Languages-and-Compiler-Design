@@ -2,9 +2,9 @@ import org.apache.commons.lang3.tuple.Pair;
 
 public class SymbolTable {
     private int size;
-    private HashTable<String, String> identifiersHashTable;
-    private HashTable<String, String> stringConstantsHashTable;
-    private HashTable<Integer, Integer> integerConstantsHashTable;
+    private HashTable<String> identifiersHashTable;
+    private HashTable<String> stringConstantsHashTable;
+    private HashTable<Integer> integerConstantsHashTable;
 
     public SymbolTable(int size) {
         this.size = size;
@@ -13,16 +13,16 @@ public class SymbolTable {
         this.integerConstantsHashTable = new HashTable<>(size);
     }
 
-    public Pair<Integer, Integer> addIdentifier(String name, String type) throws Exception {
-        return identifiersHashTable.add(name, type);
+    public Pair<Integer, Integer> addIdentifier(String name) throws Exception {
+        return identifiersHashTable.add(name);
     }
 
     public Pair<Integer, Integer> addStringConstant(String constant) throws Exception {
-        return stringConstantsHashTable.add(constant, constant);
+        return stringConstantsHashTable.add(constant);
     }
 
     public Pair<Integer, Integer> addIntegerConstant(int constant) throws Exception {
-        return integerConstantsHashTable.add(constant, constant);
+        return integerConstantsHashTable.add(constant);
     }
 
     public Pair<Integer, Integer> getPositionIdentifier(String name) {

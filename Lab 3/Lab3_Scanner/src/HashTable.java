@@ -4,8 +4,8 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.util.LinkedList;
 import java.util.List;
 
-public class HashTable<K, V> {
-    private LinkedList<Entry<K, V>>[] items;
+public class HashTable<V> {
+    private LinkedList<V>[] items;
     private int size;
 
     public HashTable(int size) {
@@ -28,7 +28,7 @@ public class HashTable<K, V> {
         return sum % size;
     }
 
-    private int hashValue(K key) {
+    private int hashValue(Object key) {
         int hashValue = -1;
         if (key instanceof Integer) {
             hashValue = hash((int) key);
@@ -38,26 +38,26 @@ public class HashTable<K, V> {
         return hashValue;
     }
 
-    public Pair<Integer, Integer> add(K key, V value) throws Exception {
-        int hashValue = hashValue(key);
-        LinkedList<Entry<K, V>> bucket = items[hashValue];
+    public Pair<Integer, Integer> add(V value) throws Exception {
+        int hashValue = hashValue(value);
+        LinkedList<V> bucket = items[hashValue];
 
-        for(Entry<K, V> entry: bucket) {
-            if(entry.getKey().equals(key)) {
-                throw new Exception("Key " + key + " is already in the table!");
+        for(V v: bucket) {
+            if(v.equals(value)) {
+                throw new Exception("Value " + value + " is already in the table!");
             }
         }
 
-        bucket.add(new Entry<>(key, value));
-        return new ImmutablePair<>(hashValue, bucket.indexOf(new Entry<>(key, value)));
+        bucket.add(value);
+        return new ImmutablePair<>(hashValue, bucket.indexOf(value));
     }
 
-    public boolean contains(K key) {
-        int hashValue = hashValue(key);
-        LinkedList<Entry<K, V>> bucket = items[hashValue];
+    public boolean contains(V value) {
+        int hashValue = hashValue(value);
+        LinkedList<V> bucket = items[hashValue];
 
-        for (Entry<K, V> entry : bucket) {
-            if (entry.getKey().equals(key)) {
+        for (V v : bucket) {
+            if (v.equals(value)) {
                 return true;
             }
         }
@@ -65,14 +65,14 @@ public class HashTable<K, V> {
         return false;
     }
 
-    public Pair<Integer, Integer> getPosition(K key) {
-        if(this.contains(key)) {
-            int hashValue = hashValue(key);
-            LinkedList<Entry<K, V>> bucket = items[hashValue];
+    public Pair<Integer, Integer> getPosition(V value) {
+        if(this.contains(value)) {
+            int hashValue = hashValue(value);
+            LinkedList<V> bucket = items[hashValue];
 
-            for(Entry<K, V> entry: bucket) {
-                if(entry.getKey().equals(key)) {
-                    return new ImmutablePair<>(hashValue, bucket.indexOf(entry));
+            for(V v: bucket) {
+                if(v.equals(value)) {
+                    return new ImmutablePair<>(hashValue, bucket.indexOf(value));
                 }
             }
         }
@@ -85,11 +85,11 @@ public class HashTable<K, V> {
         sb.append("{\n");
 
         for (int i = 0; i < items.length; i++) {
-            List<Entry<K, V>> bucket = items[i];
+            List<V> bucket = items[i];
             if (!bucket.isEmpty()) {
                 sb.append("  Bucket ").append(i).append(": ");
-                for (Entry<K, V> entry : bucket) {
-                    sb.append("[").append(entry.getKey()).append(" -> ").append(entry.getValue()).append("] ");
+                for (V value : bucket) {
+                    sb.append("[").append(value).append("] ");
                 }
                 sb.append("\n");
             }

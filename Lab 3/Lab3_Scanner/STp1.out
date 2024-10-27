@@ -1,9 +1,9 @@
 SymbolTable: {
 identifiersHashTable {
-  Bucket 3: [a -> unknown] 
-  Bucket 4: [b -> unknown] 
-  Bucket 5: [c -> unknown] 
-  Bucket 44: [max -> unknown] 
+  Bucket 26: [max] 
+  Bucket 47: [a] 
+  Bucket 48: [b] 
+  Bucket 49: [c] 
 }
 integerConstantsHashTable {
 }

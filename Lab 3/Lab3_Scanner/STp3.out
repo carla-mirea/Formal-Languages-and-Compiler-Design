@@ -1,12 +1,12 @@
 SymbolTable: {
 identifiersHashTable {
-  Bucket 12: [sum -> unknown] 
-  Bucket 16: [n -> unknown] 
-  Bucket 26: [x -> unknown] 
+  Bucket 10: [n] 
+  Bucket 20: [x] 
+  Bucket 41: [sum] 
 }
 integerConstantsHashTable {
-  Bucket 0: [0 -> 0] 
+  Bucket 0: [0] 
 }
 stringConstantsHashTable {
-  Bucket 12: ["The sum of the n numbers is " -> "The sum of the n numbers is "] 
+  Bucket 0: ["The sum of the n numbers is "] 
 }}

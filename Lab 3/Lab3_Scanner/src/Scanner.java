@@ -7,34 +7,30 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Scanner {
-    private String program;
-    private final List<String> tokens;
-    private final List<String> reservedWords;
     private SymbolTable symbolTable;
-    private List<Pair<String, Pair<Integer, Integer>>> PIF;
-    private int index = 0;
+    private List<Pair<String, Pair<Integer, Integer>>> PIF = new ArrayList<>();
+    private final List<String> tokens = new ArrayList<>();
+    private final List<String> reservedWords = new ArrayList<>();
+    private final String filePath;
+    private String program;
     private int currentLine = 1;
+    private int index = 0;
 
-    public Scanner() {
-        this.symbolTable = new SymbolTable(47);
-        this.PIF = new ArrayList<>();
-        this.reservedWords = new ArrayList<>();
-        this.tokens = new ArrayList<>();
+    public Scanner(String filePath) {
+        this.filePath = filePath;
+        this.symbolTable = new SymbolTable(50);
         try {
-            readTokens();
+            readFileAndTokenize();
         } catch(IOException e) {
             e.printStackTrace();
         }
     }
 
-    public void setProgram(String program) {
-        this.program = program;
-    }
-
-    private void readTokens() throws IOException {
+    private void readFileAndTokenize() throws IOException {
         File file = new File("./token.in");
         BufferedReader reader = Files.newBufferedReader(file.toPath());
         String line;
@@ -47,92 +43,23 @@ public class Scanner {
         }
     }
 
-    private void skipSpaces() {
-        while(index < program.length() && Character.isWhitespace(program.charAt(index))) {
-            if(program.charAt(index) == '\n') {
-                currentLine++;
-            }
-            index++;
-        }
-    }
+    private boolean checkIfIdentifier() {
+        Pattern identifierPattern = Pattern.compile("^[a-zA-Z_][a-zA-Z0-9_]*");
+        Matcher matcher = identifierPattern.matcher(program.substring(index));
 
-    private void skipComments() {
-        while(index < program.length() && program.charAt(index) == '#') {
-            while(index < program.length() && program.charAt(index) != '\n') {
-                index++;
-            }
+        if (!matcher.find()) {
+            return false;
         }
-    }
 
-    private boolean scanStringConstant() {
-        var regexForStringConstant = Pattern.compile("^\"[a-zA-z0-9_ ?:*^+=.!]*\"");
-        var matcher = regexForStringConstant.matcher(program.substring(index));
-        if(!matcher.find()) {
-            if(Pattern.compile("^\"[^\"]\"").matcher(program.substring(index)).find()) {
-                throw new ScannerException("Invalid string constant at line " + currentLine);
-            }
-            if(Pattern.compile("^\\\"[^\\\"]").matcher(program.substring(index)).find()) {
-                throw new ScannerException("Missing \" at line " + currentLine);
-            }
+        String identifier = matcher.group();
+        if (!checkIfValid(identifier, program.substring(index))) {
             return false;
         }
-        var stringConstant = matcher.group(0);
-        index += stringConstant.length();
-        Pair<Integer, Integer> position;
-        try {
-            position = symbolTable.addStringConstant(stringConstant);
-        } catch (Exception e) {
-            position = symbolTable.getPositionStringConstant(stringConstant);
-        }
-        PIF.add(new ImmutablePair<>("string const", position));
-        return true;
-    }
 
-    private boolean scanIntegerConstant() {
-        var regexForIntegerConstant = Pattern.compile("^([+-]?[1-9][0-9]*|0)");
-        var matcher = regexForIntegerConstant.matcher(program.substring(index));
-        if(!matcher.find()) {
-            return false;
-        }
-        if (Pattern.compile("^([+-]?[1-9][0-9]*|0)[a-zA-z_]").matcher(program.substring(index)).find()) {
-            return false;
-        }
-        var integerConstant = matcher.group(1);
-        index += integerConstant.length();
-        Pair<Integer, Integer> position;
-        try {
-            position = symbolTable.addIntegerConstant(Integer.parseInt(integerConstant));
-        } catch (Exception e) {
-            position = symbolTable.getPositionIntegerConstant(Integer.parseInt(integerConstant));
-        }
-        PIF.add(new ImmutablePair<>("integer const", position));
-        return true;
-    }
-
-    private boolean checkIfValid(String possibleIdentifier, String programSubstring) {
-        if(reservedWords.contains(possibleIdentifier)) {
-            return false;
-        }
-        if(Pattern.compile("[A-Za-z_][A-Za-z0-9_]* (integer|char|string|number)").matcher(programSubstring).find()) {
-            return true;
-        }
-        return symbolTable.containsIdentifier(possibleIdentifier);
-    }
-
-    private boolean scanIdentifier() {
-        var regexForIdentifier = Pattern.compile("^([a-zA-Z_][a-zA-Z0-9_]*)");
-        var matcher = regexForIdentifier.matcher(program.substring(index));
-        if(!matcher.find()) {
-            return false;
-        }
-        var identifier = matcher.group(1);
-        if(!checkIfValid(identifier, program.substring(index))) {
-            return false;
-        }
         index += identifier.length();
         Pair<Integer, Integer> position;
         try {
-            position = symbolTable.addIdentifier(identifier, "unknown");
+            position = symbolTable.addIdentifier(identifier);
         } catch (Exception e) {
             position = symbolTable.getPositionIdentifier(identifier);
         }
@@ -140,76 +67,139 @@ public class Scanner {
         return true;
     }
 
-    private boolean scanFromTokens() {
-        String possibleToken = program.substring(index).split(" ")[0];
+    private boolean checkIfIntegerConstant() {
+        Pattern integerPattern = Pattern.compile("^[+-]?\\d+");
+        Matcher matcher = integerPattern.matcher(program.substring(index));
+
+        if (!matcher.find()) {
+            return false;
+        }
+
+        String integerConstant = matcher.group();
+        if (Pattern.compile("^[+-]?\\d+[a-zA-Z_]").matcher(program.substring(index)).find()) {
+            return false;
+        }
+
+        index += integerConstant.length();
+        Pair<Integer, Integer> position;
+        try {
+            position = symbolTable.addIntegerConstant(Integer.parseInt(integerConstant));
+        } catch (Exception e) {
+            position = symbolTable.getPositionIntegerConstant(Integer.parseInt(integerConstant));
+        }
+        PIF.add(new ImmutablePair<>("integer constant", position));
+        return true;
+    }
+
+    private boolean checkIfStringConstant() throws Exception {
+        Pattern stringPattern = Pattern.compile("^\"[a-zA-Z0-9_ ?:*^+=.!]*\"");
+        Matcher matcher = stringPattern.matcher(program.substring(index));
+
+        if (!matcher.find()) {
+            if (Pattern.compile("^\"[^\"]").matcher(program.substring(index)).find()) {
+                throw new Exception("Invalid string constant at line " + currentLine);
+            }
+            if (Pattern.compile("^\"[^\"]").matcher(program.substring(index)).find()) {
+                throw new Exception("Unclosed string constant at line " + currentLine);
+            }
+            return false;
+        }
+
+        String stringConstant = matcher.group();
+        index += stringConstant.length();
+        Pair<Integer, Integer> position;
+        try {
+            position = symbolTable.addStringConstant(stringConstant);
+        } catch (Exception e) {
+            position = symbolTable.getPositionStringConstant(stringConstant);
+        }
+        PIF.add(new ImmutablePair<>("string constant", position));
+        return true;
+    }
+
+    private boolean checkIfToken() {
+        String tokenToCheck = program.substring(index).split(" ")[0];
         for(var reservedWord: reservedWords) {
-            if(possibleToken.startsWith(reservedWord)) {
+            if(tokenToCheck.startsWith(reservedWord)) {
                 var regex = "^" + "[a-zA-Z0-9_]*" + reservedWord + "[a-zA-Z0-9_]+";
-                if(Pattern.compile(regex).matcher(possibleToken).find()) {
+                if(Pattern.compile(regex).matcher(tokenToCheck).find()) {
                     return false;
                 }
                 index += reservedWord.length();
                 PIF.add(new ImmutablePair<>(reservedWord, new ImmutablePair<>(-1, -1)));
+
                 return true;
             }
         }
+
         for(var token: tokens) {
-            if(Objects.equals(token, possibleToken)) {
+            if(Objects.equals(token, tokenToCheck)) {
                 index += token.length();
                 PIF.add(new ImmutablePair<>(token, new ImmutablePair<>(-1, -1)));
+
                 return true;
             }
-            else if(possibleToken.startsWith(token)) {
+            else if(tokenToCheck.startsWith(token)) {
                 index += token.length();
                 PIF.add(new ImmutablePair<>(token, new ImmutablePair<>(-1, -1)));
+
                 return true;
             }
         }
+
         return false;
     }
 
-    private void nextToken() throws ScannerException {
-        skipSpaces();
-        skipComments();
-        if(index == program.length()) {
-            return;
+    private boolean checkIfValid(String identifier, String subProgram) {
+        if(reservedWords.contains(identifier)) {
+            return false;
         }
-        if(scanIdentifier()) {
-            return;
+        if(Pattern.compile("[A-Za-z_][A-Za-z0-9_]* (integer|char|string|number)").matcher(subProgram).find()) {
+            return true;
         }
-        if(scanStringConstant()) {
-            return;
-        }
-        if(scanIntegerConstant()) {
-            return;
-        }
-        if(scanFromTokens()) {
-            return;
-        }
-        throw new ScannerException("Lexical error: invalid token at line " + currentLine + ", index " + index);
+
+        return symbolTable.containsIdentifier(identifier);
     }
 
-    public void scan(String programFileName) {
+    private void skipSpacesAndComments() {
+        while(index < program.length() && Character.isWhitespace(program.charAt(index))) {
+            if(program.charAt(index) == '\n') {
+                currentLine++;
+            }
+            index++;
+        }
+        while(index < program.length() && program.charAt(index) == '#') {
+            while(index < program.length() && program.charAt(index) != '\n') {
+                index++;
+            }
+        }
+    }
+
+    public void scan() {
         try {
-            Path file = Path.of("./" + programFileName);
-            setProgram(Files.readString(file));
-            index = 0;
-            PIF = new ArrayList<>();
-            symbolTable = new SymbolTable(47);
-            currentLine = 1;
+            Path file = Path.of("./" + filePath);
+            this.program = Files.readString(file);
             while(index < program.length()) {
-                nextToken();
+                skipSpacesAndComments();
+                if(!(checkIfIdentifier() || checkIfIntegerConstant() || checkIfStringConstant() || checkIfToken())) {
+                    throw new Exception("Lexical error at line " + currentLine + " and index " + index);
+                }
             }
-            FileWriter fileWriter = new FileWriter("PIF" + programFileName.replace(".txt", ".out"));
+            String PIFFileName = "PIF" + filePath.replace(".txt", ".out");
+            FileWriter PIFFileWriter = new FileWriter(PIFFileName);
             for(var pair: PIF) {
-                fileWriter.write(pair.getKey() + " -> (" + pair.getValue().getKey() + ", " + pair.getValue().getValue() + ")\n");
+                PIFFileWriter.write(pair.getKey() + ": (" + pair.getValue().getKey() + ", " + pair.getValue().getValue() + ")\n");
             }
-            fileWriter.close();
-            fileWriter = new FileWriter("ST" + programFileName.replace(".txt", ".out"));
-            fileWriter.write(symbolTable.toString());
-            fileWriter.close();
-            System.out.println("Lexically correct");
-        } catch (IOException | ScannerException e) {
+
+            String STFileName = "ST" + filePath.replace(".txt", ".out");
+            FileWriter STFileWriter = new FileWriter(STFileName);
+            STFileWriter.write(symbolTable.toString());
+
+            PIFFileWriter.close();
+            STFileWriter.close();
+
+            System.out.println("Program is lexically correct :)");
+        } catch (Exception e) {
             System.out.println(e.getMessage());
         }
     }
