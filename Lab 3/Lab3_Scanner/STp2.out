@@ -1,0 +1,12 @@
+SymbolTable: {
+identifiersHashTable {
+  Bucket 3: [a -> unknown] 
+  Bucket 4: [b -> unknown] 
+  Bucket 20: [r -> unknown] 
+}
+integerConstantsHashTable {
+  Bucket 0: [0 -> 0] 
+}
+stringConstantsHashTable {
+  Bucket 7: ["The Greatest Common Divisor is " -> "The Greatest Common Divisor is "] 
+}}

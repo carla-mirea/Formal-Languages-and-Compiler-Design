@@ -1,0 +1,15 @@
+be n number
+be x number
+be sum number
+
+sum = 0
+
+readFromConsole(n)
+
+stopWhen(n < 0) {
+	readFromConsole(x)
+	sum += x
+}
+
+showInConsole("The sum of the n numbers is ")
+showInConsole(sum)
