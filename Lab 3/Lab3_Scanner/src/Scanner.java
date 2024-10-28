@@ -179,26 +179,33 @@ public class Scanner {
         try {
             Path file = Path.of("./" + filePath);
             this.program = Files.readString(file);
+            boolean lexicallyCorrect = true;
+
             while(index < program.length()) {
                 skipSpacesAndComments();
                 if(!(checkIfIdentifier() || checkIfIntegerConstant() || checkIfStringConstant() || checkIfToken())) {
-                    throw new Exception("Lexical error at line " + currentLine + " and index " + index);
+                    String incorrectToken = program.substring(index).split("[\\W\\s]+")[0];
+                    index += incorrectToken.length();
+                    lexicallyCorrect = false;
+                    System.out.println("Lexical error at line " + currentLine + " and index " + index + ", incorrect token " + incorrectToken);
                 }
             }
-            String PIFFileName = "PIF" + filePath.replace(".txt", ".out");
-            FileWriter PIFFileWriter = new FileWriter(PIFFileName);
-            for(var pair: PIF) {
-                PIFFileWriter.write(pair.getKey() + ": (" + pair.getValue().getKey() + ", " + pair.getValue().getValue() + ")\n");
+            if(lexicallyCorrect) {
+                String PIFFileName = "PIF" + filePath.replace(".txt", ".out");
+                FileWriter PIFFileWriter = new FileWriter(PIFFileName);
+                for(var pair: PIF) {
+                    PIFFileWriter.write(pair.getKey() + ": (" + pair.getValue().getKey() + ", " + pair.getValue().getValue() + ")\n");
+                }
+
+                String STFileName = "ST" + filePath.replace(".txt", ".out");
+                FileWriter STFileWriter = new FileWriter(STFileName);
+                STFileWriter.write(symbolTable.toString());
+
+                PIFFileWriter.close();
+                STFileWriter.close();
+
+                System.out.println("Program is lexically correct :)");
             }
-
-            String STFileName = "ST" + filePath.replace(".txt", ".out");
-            FileWriter STFileWriter = new FileWriter(STFileName);
-            STFileWriter.write(symbolTable.toString());
-
-            PIFFileWriter.close();
-            STFileWriter.close();
-
-            System.out.println("Program is lexically correct :)");
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
