@@ -1,0 +1,12 @@
+SymbolTable: {
+identifiersHashTable {
+  Bucket 10: [n] 
+  Bucket 20: [x] 
+  Bucket 41: [sum] 
+}
+integerConstantsHashTable {
+  Bucket 0: [0] 
+}
+stringConstantsHashTable {
+  Bucket 0: ["The sum of the n numbers is "] 
+}}

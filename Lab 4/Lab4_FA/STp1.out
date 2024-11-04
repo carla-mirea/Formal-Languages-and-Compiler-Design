@@ -1,0 +1,11 @@
+SymbolTable: {
+identifiersHashTable {
+  Bucket 26: [max] 
+  Bucket 47: [a] 
+  Bucket 48: [b] 
+  Bucket 49: [c] 
+}
+integerConstantsHashTable {
+}
+stringConstantsHashTable {
+}}

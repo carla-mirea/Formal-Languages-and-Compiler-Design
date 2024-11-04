@@ -1,0 +1,14 @@
+be a number
+be b number
+be c number
+be max number
+
+readFromConsole(a)
+readFromConsole(b)
+readFromConsole(c)
+
+check (max > a) max = a
+check (max > b) max = b
+check (max > c) max = c
+
+showInConsole(max)

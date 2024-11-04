@@ -1,0 +1,15 @@
+be a number
+be b number
+be r number
+
+readFromConsole(a)
+readFromConsole(b)
+
+stopWhen (b == 0) {
+	r = a % b
+	a = b
+	b = r
+}
+
+showInConsole("The Greatest Common Divisor is ")
+showInConsole(a)
