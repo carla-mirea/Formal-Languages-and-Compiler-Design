@@ -1,0 +1,76 @@
+%{
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "parser.tab.h"
+int currentLine = 1;
+%}
+
+%option noyywrap
+
+IDENTIFIER      [a-zA-Z_][a-zA-Z0-9_]*
+NUMBER_CONST    0|[+|-]?[1-9][0-9]*([.][0-9]*)?|[+|-]?0[.][0-9]*
+STRING_CONST    [\"][a-zA-Z0-9 ]+[\"]
+CHAR_CONST      [\'][a-zA-Z0-9 ][\']
+
+%%
+
+"be"              { printf("Reserved word: %s\n", yytext); return BE; }
+"number"          { printf("Reserved word: %s\n", yytext); return NUMBER; }
+"integer"         { printf("Reserved word: %s\n", yytext); return INTEGER; }
+"bool"            { printf("Reserved word: %s\n", yytext); return BOOL; }
+"string"          { printf("Reserved word: %s\n", yytext); return STRING; }
+"char"            { printf("Reserved word: %s\n", yytext); return CHAR; }
+"const"           { printf("Reserved word: %s\n", yytext); return CONST; }
+"check"           { printf("Reserved word: %s\n", yytext); return CHECK; }
+"else"            { printf("Reserved word: %s\n", yytext); return ELSE; }
+"readFromConsole" { printf("Reserved word: %s\n", yytext); return READFROMCONSOLE; }
+"showInConsole"   { printf("Reserved word: %s\n", yytext); return SHOWINCONSOLE; }
+"stopWhen"        { printf("Reserved word: %s\n", yytext); return STOPWHEN; }
+"function"        { printf("Reserved word: %s\n", yytext); return FUNCTION; }
+"for"             { printf("Reserved word: %s\n", yytext); return FOR; }
+"start"		{ printf("Reserved word: %s\n", yytext); return START; }
+
+"+"               { printf("Operator: %s\n", yytext); return PLUS; }
+"-"               { printf("Operator: %s\n", yytext); return MINUS; }
+"*"               { printf("Operator: %s\n", yytext); return MULTIPLY; }
+"/"               { printf("Operator: %s\n", yytext); return DIVIDE; }
+"\\\\"            { printf("Operator: %s\n", yytext); return BACKSLASH; }
+"%"               { printf("Operator: %s\n", yytext); return MODULO; }
+"<"               { printf("Operator: %s\n", yytext); return LESS; }
+"<="              { printf("Operator: %s\n", yytext); return LESSEQUAL; }
+">"               { printf("Operator: %s\n", yytext); return GREATER; }
+">="              { printf("Operator: %s\n", yytext); return GREATEREQUAL; }
+"=="              { printf("Operator: %s\n", yytext); return EQUAL; }
+"!="              { printf("Operator: %s\n", yytext); return NOTEQUAL; }
+"&&"              { printf("Operator: %s\n", yytext); return AND; }
+"||"              { printf("Operator: %s\n", yytext); return OR; }
+"="               { printf("Operator: %s\n", yytext); return ASSIGN; }
+
+"("               { printf("Separator: %s\n", yytext); return LEFTROUND; }
+")"               { printf("Separator: %s\n", yytext); return RIGHTROUND; }
+"{"               { printf("Separator: %s\n", yytext); return LEFTCURLY; }
+"}"               { printf("Separator: %s\n", yytext); return RIGHTCURLY; }
+"["               { printf("Separator: %s\n", yytext); return LEFTBRACKET; }
+"]"               { printf("Separator: %s\n", yytext); return RIGHTBRACKET; }
+":"               { printf("Separator: %s\n", yytext); return COLON; }
+";"               { printf("Separator: %s\n", yytext); return SEMICOLON; }
+","               { printf("Separator: %s\n", yytext); return COMMA; }
+"'"               { printf("Separator: %s\n", yytext); return APOSTROPHE; }
+"\""              { printf("Separator: %s\n", yytext); return QUOTE; }
+
+{IDENTIFIER}      { printf("Identifier: %s\n", yytext); return IDENTIFIER; }
+{NUMBER_CONST}    { printf("Number constant: %s\n", yytext); return NUMBER_CONST; }
+{STRING_CONST}    { printf("String constant: %s\n", yytext); return STRING_CONST; }
+{CHAR_CONST}      { printf("Character constant: %s\n", yytext); return CHAR_CONST; }
+
+[ \t]+            {}
+[\n]+             { currentLine++; }
+
+[0-9][a-zA-Z0-9_]*		{printf("Illegal identifier at line %d\n", currentLine);}
+[+|-]0		{printf("Illegal numeric constant at line %d\n", currentLine);}
+[+|-]?[0][0-9]*([.][0-9]*)?		{printf("Illegal numeric constant at line %d\n", currentLine);}
+[\'][a-zA-Z0-9 ]{2,}[\']|[\'][a-zA-Z0-9 ][a-zA-Z0-9 ][\']		{printf("Illegal character constant at line %d\n", currentLine);}
+[\"][a-zA-Z0-9_]+|[a-zA-Z0-9_]+[\"]		{printf("Illegal string constant at line %d\n", currentLine);}
+
+%%
